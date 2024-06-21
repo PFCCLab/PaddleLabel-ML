@@ -5,7 +5,7 @@ import copy
 from connexion import request
 
 from paddlelabel_ml.util import abort, get_models
-
+import paddlelabel_ml
 
 # TODO: switch to a thread safe approach
 global loaded_models
@@ -16,9 +16,12 @@ loading_models = set()
 models = get_models()
 
 
-# TODO: change this to return version
 def isBackendUp():
     return True
+
+
+def getVersion():
+    return paddlelabel_ml.version
 
 
 def getAll():
@@ -93,10 +96,13 @@ async def load(model_name, reload=False):
 
 async def predict(model_name):
     tic = time.time()
+    if model_name in loading_models:
+        time.sleep(0.5)
+        if model_name in loading_models:
+            abort(f"Model {model_name} is still loading, check back after 1 or 2 minutes!", 500)
+
     if model_name not in loaded_models.keys():
         abort(f"Model {model_name} not loaded, call load endpoint first!", 500)
-    if model_name in loading_models:
-        abort(f"Model {model_name} is still loading, check back after 1 or 2 minutes!", 500)
 
     params = request.json
     if "piggyback" in params.keys():
