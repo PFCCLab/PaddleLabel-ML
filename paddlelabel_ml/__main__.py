@@ -8,9 +8,10 @@ from flask_cors import CORS
 import paddle
 
 from paddlelabel_ml import util
+from starlette.middleware.cors import CORSMiddleware
+from connexion.middleware import MiddlewarePosition
 
 HERE = Path(__file__).parent.absolute()
-
 
 def parse_args():
     parser = argparse.ArgumentParser(description="PaddleLabel ML")
@@ -97,7 +98,18 @@ def run():
     # logger.info("App starting")
     print(f"PaddleLabel-ML is running at http://localhost:{args.port}")
 
-    connexion_app.run(host=host, port=args.port, debug=args.debug)
+
+    connexion_app.add_middleware(
+        CORSMiddleware,
+        position=MiddlewarePosition.BEFORE_EXCEPTION,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    connexion_app.app.debug = args.debug
+    connexion_app.run(host=host, port=args.port)
 
 
 if __name__ == "__main__":
